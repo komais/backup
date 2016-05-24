@@ -18,8 +18,8 @@ header={'Content-type': 'application/x-www-form-urlencoded',
 h=httplib2.Http('d:/tmp/cache')
 
 
-def login():
-    body = {"user": "lt" , 'pwd' : 'lt' , 'login' : '登陆'} 
+def login(passwd):
+    body = {"user": "lt" , 'pwd' : passwd , 'login' : '登陆'} 
 
     url = 'http://192.168.60.23/bms/index.php'
     response , content = h.request( url , 'POST' , headers = header ,
@@ -88,9 +88,9 @@ def reformat_date(day):
 	return time.strftime("%Y-%m-%d" , time.strptime( day  , "%Y/%m/%d") )
         
 
-def xiadan(  sub_project_id , finish_date , dutyer , require , start_date , project_name):
+def xiadan( passwd ,  sub_project_id , finish_date , dutyer , require , start_date , project_name):
     #sub_project_id , finish_date , dutyer , require = 'test-2test-2' , '2016-06-13' , '刘涛' , 'dddddddddddddddddd'
-    cookie= login()
+    cookie= login( passwd )
     response, content = insert_sub_project(cookie , sub_project_id , finish_date , dutyer , require)
     #print(content.decode())
     if content.decode().find('Duplicate entry') > -1: print(sub_project_id , "replicate")
@@ -101,6 +101,7 @@ def main():
 		formatter_class=argparse.RawDescriptionHelpFormatter,
 		epilog='author:\t{0}\nmail:\t{1}'.format(__author__,__mail__))
 	parser.add_argument('-i','--input',help='input file',dest='input',type=open , required = True)
+	parser.add_argument('-p','--passwd',help='passwd',dest='passwd', required = True)
 	args=parser.parse_args()
 	
 	for line in args.input:
@@ -108,7 +109,7 @@ def main():
 		tmp=line.rstrip().split('\t')
 		sub_project_id , project_name, dutyer, start_date, finish_date , require = tmp[0] , tmp[1] , tmp[2] , tmp[3] ,tmp[4] , tmp[5]
 		
-		xiadan(  sub_project_id , reformat_date(finish_date) , dutyer , require , reformat_date(start_date) , project_name)
+		xiadan( args.passwd ,  sub_project_id , reformat_date(finish_date) , dutyer , require , reformat_date(start_date) , project_name)
 		print(tmp , 'ok')
 if __name__ == '__main__':
 	main()
