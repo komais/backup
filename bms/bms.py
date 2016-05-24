@@ -19,7 +19,7 @@ h=httplib2.Http('d:/tmp/cache')
 
 
 def login():
-    body = {"user": "lt" , 'pwd' : 'lt' , 'login' : '登陆'} 
+    body = {"user": "lt" , 'pwd' : '**' , 'login' : '登陆'} 
 
     url = 'http://192.168.60.23/bms/index.php'
     response , content = h.request( url , 'POST' , headers = header ,
