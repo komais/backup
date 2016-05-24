@@ -64,9 +64,11 @@ def main():
 				sub_project_id = mm[0]
 				if sub_project_id in checked : 
 					print(sub_project_id + " backup repeat")
+					continue 
 				checked[sub_project_id] = 0 
 				if sub_project_id in std_dict :
 					type , dalei , person , checker = std_dict[sub_project_id]
+					if person == '' : print( sub_project_id + "miss person")
 					tt = ''
 					if type == '商业':
 						if dalei == 'Filter':
@@ -86,6 +88,7 @@ def main():
 					if not person in persons : persons.append(person)
 				elif sub_project_id in add_dict:
 					type , dalei ,  person ,checker = add_dict[sub_project_id] 
+					if person == '' : print( sub_project_id + "miss person")
 					tt = ''
 					if type == '商业':
 						if dalei == 'Filter':

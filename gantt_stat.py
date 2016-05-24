@@ -115,7 +115,47 @@ class Project():
 			             self.name , self.person , self.start , self.end,
 			              self.finish    , self.delay ,       self.delay_cause        , self.sequence_finish ,
 						  self.seq_finish_date        ,       self.state, self.information_table_date , self.gannt_write_date]) + "\n"
+	def delay_type(self):
+		if  self.sequence_finish :
+			if self.sequence_finish == '否': 
+				if self.project_type == '商业' or self.project_dalei == 'Filter':
+					return 'experiment delay'
+				else :
+					return 'bioinformatic delay'
+			else :
+				return 'bioinformatic delay'
+		else :
+			if self.project_type == '商业' or self.project_dalei == 'Filter':
+				return 'experiment delay'
+			else :
+				return 'bioinformatic delay'
+		if self.start and self.seq_finish_date and self.end and self.finish :
+			experiment_expect_date = datetime.datetime.strptime( self.start , "%Y%m%d")
+			experiment_reality_date = datetime.datetime.strptime( self.seq_finish_date , "%Y%m%d")
+			project_expect_date = datetime.datetime.strptime( self.end , "%Y%m%d")
+			project_reality_date = datetime.datetime.strptime( self.finish , "%Y%m%d")
 
+			day_delay_info_table = 0
+			if self.information_table_date : 
+				information_table_date = datetime.datetime.strptime( self.information_table_date, "%Y%m%d")
+				day_delay_info_table = information_table_date - experiment_expect_date
+				day_delay_info_table = day_delay_info_table.days
+
+			day_delay_experiment = experiment_reality_date - experiment_expect_date
+			day_delay_experiment = day_delay_experiment.days
+			day_delay_project = project_reality_date - project_expect_date
+			day_delay_project = day_delay_project.days
+			max_day = max(day_delay_experiment , day_delay_info_table)
+
+			if day_delay_project > max_day :
+				return 'bioinformatic delay'
+			else:
+				if day_delay_experiment > day_delay_info_table :
+					return 'experiment delay'
+				else :
+					return 'infor_table delay'
+		else :
+			return 'bioinformatic delay' 
 
 def remove_bad_format_date(day):
 	day = day.replace("-" , "")
@@ -177,6 +217,7 @@ def main():
 	person_dict = read_person_list()
 
 	delay_this_week , should_finish_this_week ,  should_finish_next_week = '', '' ,''
+	bio_delay , expe_delay , info_delay  = '' , '' ,''
 
 	all_projects = read_project(args.input)
 	all_stat = {}
@@ -193,7 +234,13 @@ def main():
 		if a_project.delay_this_week(args.day) == 'yet finish':
 			should_finish_next_week += '*' + a_project.__str__() 
 		elif a_project.delay_this_week(args.day): 
-			delay_this_week += '' + a_project.__str__()
+			if a_project.delay_type() == 'bioinformatic delay':
+				bio_delay += a_project.__str__()
+			elif a_project.delay_type() == 'experiment delay':
+				expe_delay += a_project.__str__()
+			else :
+				info_delay += a_project.__str__()
+			#delay_this_week += '' + a_project.__str__()
 		if a_project.finish_next_week(args.day):
 			should_finish_next_week += '#' + a_project.__str__()
 
@@ -223,8 +270,14 @@ def main():
 			all_stat['pass_check'][a_project.judge_type()][a_project.person] += 1
 
 	perfect_print(all_stat , args.output ,person_dict)
-	args.delay.write("report_id|project_type|project_dalei|project_detail|project_id|name|person|start|end|finish_day|delay|delay_reason|sequence_finish|seq_date|state|infor_table_date\n")
-	args.delay.write('{0}-------finish this week--------------------------\n{1}-------finish next week--------------------------\n{2}'.format(delay_this_week , should_finish_this_week , should_finish_next_week))
+	args.delay.write("report_id|project_type|project_dalei|project_detail|project_id|name|person|start|end|finish_day|delay|delay_reason|sequence_finish|seq_date|state|infor_table_date|gannt_day")
+	args.delay.write('''
+-------------------------信息延期--------------------------------
+{0}-------------------------实验延期--------------------------------
+{1}-------------------------信息收集表延期-------------------------
+{2}-------------------------yet finish this week-------------------
+{3}-------------------------should finish next week-----------------
+{4}'''.format( bio_delay , expe_delay , info_delay  , should_finish_this_week , should_finish_next_week))
 
 if __name__ == '__main__':
 	main()
